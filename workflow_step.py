@@ -42,7 +42,7 @@ def edit(ack: Ack, step: dict, configure: Configure):
             "type": "radio_buttons",
             "options": language_options,
         },
-        "label": {"type": "plain_text", "text": "ニュース記事の言語"},
+        "label": {"type": "plain_text", "text": "言語"},
     }
 
     # 最大記事数を表示することを指定するブロック
@@ -77,11 +77,14 @@ def edit(ack: Ack, step: dict, configure: Configure):
         "element": {
             "type": "plain_text_input",
             "action_id": "_",
-            "placeholder": {"type": "plain_text", "text": "東証、テレワーク、Jリーグ"},
+            "placeholder": {
+                "type": "plain_text",
+                "text": "例：東証、テレワーク、Jリーグ（カンマ / 読点区切りで複数指定可能、指定しない場合は全記事から最新を取得）",
+            },
         },
         "label": {
             "type": "plain_text",
-            "text": "検索条件（カンマ/読点区切りで複数指定可能、空白の場合は全記事から最新のものを取得）",
+            "text": "検索条件",
         },
     }
 
@@ -154,20 +157,18 @@ def save(ack: Ack, view: dict, update: Update):
     ack()
 
 
-def enable_workflow_step(app: App, newsapi_api_key: str):
+def enable_workflow_step(app: App, news_api_key: str):
     def execute(step: dict, client: WebClient, complete: Complete, fail: Fail):
         inputs = step.get("inputs", {})
         try:
             # inputs から値を取り出します
             query = inputs.get(input_query).get("value")
-            num_articles = inputs.get(input_num_articles).get("value")
+            num_articles = int(inputs.get(input_num_articles).get("value"))
             language = inputs.get(input_language).get("value")
             channels = inputs.get(input_channel_ids).get("value").split(",")
 
             # 上記の値を使って外部の API の News API を呼び出します
-            articles = fetch_articles(
-                newsapi_api_key, query, int(num_articles), language
-            )
+            articles = fetch_articles(news_api_key, query, num_articles, language)
         except Exception as err:
             fail(error={"message": f"Failed to fetch news articles ({err})"})
             return
@@ -175,17 +176,18 @@ def enable_workflow_step(app: App, newsapi_api_key: str):
         outputs = {}
         try:
             if articles:
-                blocks = create_article_message(articles)
-                for channel in channels:
-                    # あらかじめ指定されたすべてのチャンネルにメッセージを送信します
-                    response = client.chat_postMessage(
-                        channel=channel,
-                        blocks=blocks,
-                        unfurl_links=False,
-                        unfurl_media=False,
-                        text="\n".join([article.title for article in articles]),
-                    )
-                    outputs[channel] = response.get("message").get("ts")
+                for article in articles:
+                    blocks = format_article(article)
+                    for channel in channels:
+                        # あらかじめ指定されたすべてのチャンネルにメッセージを送信します
+                        response = client.chat_postMessage(
+                            channel=channel,
+                            blocks=blocks,
+                            unfurl_links=False,
+                            unfurl_media=False,
+                            text=article.title,
+                        )
+                        outputs[channel] = response.get("message").get("ts")
             else:
                 # 今回はニュース記事が見つからなかった旨を通知します
                 for channel in channels:
@@ -200,6 +202,7 @@ def enable_workflow_step(app: App, newsapi_api_key: str):
         # complete に 後続ステップが使う変数のリストである outputs を渡すことでこのステップの実行が正常終了します
         complete(outputs=outputs)
 
+    # アプリがここで指定されたコールバックを使ってワークフローステップのイベントに応答します
     app.step(
         WorkflowStep(
             callback_id="news_step",
@@ -208,14 +211,6 @@ def enable_workflow_step(app: App, newsapi_api_key: str):
             execute=execute,
         )
     )
-
-
-def create_article_message(articles) -> List[dict]:
-    blocks = []
-    for article in articles:
-        chunk = format_article(article)
-        blocks.extend(chunk)
-    return blocks
 
 
 def _extract(

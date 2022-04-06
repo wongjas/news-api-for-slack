@@ -70,22 +70,21 @@ def format_article(article: Article) -> List[dict]:
             "elements": [
                 {
                     "type": "mrkdwn",
-                    "text": f"⏱ {article.publishedAt.astimezone(pytz.timezone('Asia/Tokyo')).strftime('%Y-%m-%d %H:%M:%S')} ",
+                    "text": f"⏱ {article.publishedAt.astimezone(pytz.timezone('Asia/Tokyo')).strftime('%Y-%m-%d %H:%M:%S')}",
                 }
             ],
         },
         {
             "type": "section",
-            "text": {"type": "mrkdwn", "text": article.description},
+            "text": {
+                "type": "mrkdwn",
+                "text": f"{article.description[:100]}... <{article.url}|続きを読む>",
+            },
             "accessory": {
                 "type": "image",
                 "image_url": article.urlToImage,
                 "alt_text": "ニュース記事の画像",
             },
-        },
-        {
-            "type": "context",
-            "elements": [{"type": "mrkdwn", "text": f"全文を読む：{article.url}"}],
         },
     ]
 

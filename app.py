@@ -7,7 +7,7 @@ from workflow_step import enable_workflow_step
 
 logging.basicConfig(level=logging.DEBUG)
 
-newsapi_api_key = os.environ["NEWSAPI_API_KEY"]
+newsapi_api_key = os.environ["NEWS_API_KEY"]
 
 app = App(token=os.environ.get("SLACK_BOT_TOKEN"))
 
