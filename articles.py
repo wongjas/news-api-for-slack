@@ -49,6 +49,7 @@ def fetch_articles(
     )
 
     if query:
+        # より高度な検索条件も利用できます、こちらのリンクでご参照ください https://newsapi.org/docs/endpoints/everything
         params["q"] = query.replace(",", " OR ").replace("、", " OR ")
     else:
         del params["q"]

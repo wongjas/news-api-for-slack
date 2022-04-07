@@ -79,12 +79,12 @@ def edit(ack: Ack, step: dict, configure: Configure):
             "action_id": "_",
             "placeholder": {
                 "type": "plain_text",
-                "text": "例：東証、テレワーク、Jリーグ（カンマ / 読点区切りで複数指定可能、指定しない場合は全記事から最新を取得）",
+                "text": "例：東証、テレワーク（カンマ / 読点区切りで複数指定可能）",
             },
         },
         "label": {
             "type": "plain_text",
-            "text": "検索条件",
+            "text": "検索条件（指定しない場合は全記事から最新を取得）",
         },
     }
 
@@ -149,7 +149,7 @@ def save(ack: Ack, view: dict, update: Update):
             {
                 "name": channel_id,
                 "type": "text",
-                "label": "投稿されたメッセージの ts",
+                "label": "投稿されたメッセージの時刻",
             }
             for channel_id in channels
         ],
