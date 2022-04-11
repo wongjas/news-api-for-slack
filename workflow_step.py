@@ -130,7 +130,7 @@ def edit(ack: Ack, step: dict, configure: Configure):
 def save(ack: Ack, view: dict, update: Update):
     state_values = view["state"]["values"]
 
-    # 送信された入力値を取得（ここではニュースを検索する条件として指定されたカンマ区切りのキーワード）
+    # 送信された入力値を取得
     channels = _extract(state_values, input_channel_ids, "selected_channels")
     query = _extract(state_values, input_query, "value")
     num_articles = _extract(state_values, input_num_articles, "selected_option")
